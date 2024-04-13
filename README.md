@@ -1,10 +1,10 @@
-anable carriar
-CW 1
-disable carriar
-CW 0
-
-set output frequency
-freq 868
-
-set output power
-pwr 10
+anable carriar<br>
+CW 1<br>
+disable carriar<br>
+CW 0<br>
+<br>
+set output frequency<br>
+freq 868<br>
+<br>
+set output power<br>
+pwr 10<br>

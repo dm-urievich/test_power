@@ -5,6 +5,7 @@
 #include <RadioLib.h>
 
 //#define TTGO_V2 1
+//#define TTGO_t3_v1_6 1
 // #define BARVINOK_TX 1
 // #define RADIOMATER_BANDIT 1
 #define ES900TX 1
@@ -17,7 +18,7 @@
 float default_freq = 750;
 float default_pwr = 2;
 
-#if defined(TTGO_V2)
+#if defined(TTGO_V2) || defined(TTGO_t3_v1_6) 
 
 #define LORA_CS     18
 #define LORA_IRQ    26
@@ -28,9 +29,12 @@ float default_pwr = 2;
 #define LORA_MOSI   27
 
 #define LED_BUILTIN 25
-
 const bool radio_rfo_hf = false;
 
+#if defined(TTGO_t3_v1_6)
+//https://github.com/Xinyuan-LilyGO/LilyGo-LoRa-Series/blob/master/examples/ArduinoLoRa/LoRaSender/utilities.h
+#define RADIO_TCXO_ENABLE           33
+#endif
 #elif defined(BARVINOK_TX)
 
 // Barvinok ES900 SL Retrick
@@ -177,6 +181,10 @@ void initLoRa() {
 #else
     SPI.pins(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
     SPI.begin();
+#endif
+#if defined RADIO_TCXO_ENABLE
+    pinMode(RADIO_TCXO_ENABLE, OUTPUT);
+    digitalWrite(RADIO_TCXO_ENABLE, HIGH);
 #endif
     int state = radio.beginFSK();
     if (state == RADIOLIB_ERR_NONE) {
@@ -327,9 +335,9 @@ static CLIRet_t aCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
 
     if (buf) {
         int apc = atoi((char*)buf);
-
+#if defined(PIN_RFamp_APC2)
         dacWrite(PIN_RFamp_APC2, apc);
-
+#endif
         Serial.printf("Set DAC power control %d", apc);
     }
     else {

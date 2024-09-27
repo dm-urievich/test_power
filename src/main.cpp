@@ -4,18 +4,25 @@
 #include <SPI.h>
 #include <RadioLib.h>
 
-//#define TTGO_V2 1
+#include <FastLED_NeoPixel.h>
+
+// #define TTGO_V2 1
 //#define TTGO_t3_v1_6 1
 // #define BARVINOK_TX 1
 // #define RADIOMATER_BANDIT 1
-#define ES900TX 1
+// #define ES900TX 1
 // #define BETAFPV_MICRO 1
 // #define ELRS_RX 1
 // #define BETAFPV_TX_400 1
-
+// #define NAMIMNORC_900 1
+// #define BAYCK_LR1121_DUAL 1
+// #define BETAFPV_2400_MICRO 1
+// #define HAPPYMODEL_ES24 1
+#define ES900TX_MAX 1
+// #define HGLRC_900 1
 
 // #define CW_FROM_STARTUP 1
-float default_freq = 750;
+float default_freq = 915;
 float default_pwr = 2;
 
 #if defined(TTGO_V2) || defined(TTGO_t3_v1_6) 
@@ -29,6 +36,7 @@ float default_pwr = 2;
 #define LORA_MOSI   27
 
 #define LED_BUILTIN 25
+
 const bool radio_rfo_hf = false;
 
 #if defined(TTGO_t3_v1_6)
@@ -53,6 +61,9 @@ const bool radio_rfo_hf = false;
 #define LORA_MOSI   32
 
 #define LED_BUILTIN 22
+#define LED_IS_RGB  1
+
+#define TST_FW      1
 
 const bool radio_rfo_hf = false;
 
@@ -138,6 +149,131 @@ const bool radio_rfo_hf = false;
 
 #define FAN_EN_PIN 27
 
+#elif defined(NAMIMNORC_900)
+
+#define LORA_CS     5
+#define LORA_IRQ    17
+#define LORA_RST    21
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define LED_BUILTIN 15
+
+const bool radio_rfo_hf = false;
+
+#define RX_EN_PIN 33
+#define FAN_EN_PIN 2
+#define PIN_RFamp_APC2 25
+
+#elif defined(BAYCK_LR1121_DUAL)
+
+// left lr1121
+#define LORA_CS     27
+#define LORA_IRQ    37
+#define LORA_RST    26
+#define LORA_BUSY   36
+
+
+//right chip
+#define LORA_CS_2     13
+#define LORA_IRQ_2    34
+#define LORA_RST_2    21
+#define LORA_BUSY_2   39
+
+#define RADIO_DCDC  1
+
+#define LORA_SCK    25
+#define LORA_MISO   33
+#define LORA_MOSI   32
+
+#define LED_BUILTIN 22
+
+const bool radio_rfo_hf = false;
+
+#define chip_LR1121 1
+
+#elif defined(BETAFPV_2400_MICRO)
+
+#define LORA_CS     5
+#define LORA_IRQ    4
+#define LORA_RST    14
+#define LORA_BUSY   21
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define RX_EN_PIN   27
+#define TX_EN_PIN   26
+
+#define FAN_EN_PIN  17
+
+#define LED_BUILTIN 16
+
+#define chip_SX1281 1
+
+#elif defined(HAPPYMODEL_ES24)
+
+#define LORA_CS     5
+#define LORA_IRQ    4
+#define LORA_RST    14
+#define LORA_BUSY   21
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define RADIO_DCDC  1
+
+#define RX_EN_PIN   27
+#define TX_EN_PIN   26
+
+#define FAN_EN_PIN  17
+
+#define LED_BUILTIN 15
+
+#define chip_SX1281 1
+
+#elif defined(ES900TX_MAX)
+
+#define LORA_CS     27
+#define LORA_IRQ    36
+#define LORA_RST    2
+
+#define LORA_SCK    25
+#define LORA_MISO   33
+#define LORA_MOSI   32
+
+#define LED_BUILTIN 22
+
+const bool radio_rfo_hf = false;
+
+#define RX_EN_PIN   10
+#define TX_EN_PIN   14
+#define FAN_EN_PIN  4
+#define PIN_RFamp_APC2 26
+#define LED_IS_RGB  1
+
+#elif defined(HGLRC_900)
+
+#define LORA_CS     26
+#define LORA_IRQ    4
+#define LORA_RST    14
+
+#define LORA_SCK    2
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define LED_BUILTIN 27
+
+const bool radio_rfo_hf = true;
+
+#define RX_EN_PIN   12
+#define FAN_EN_PIN  32
+#define LED_IS_RGB  1
+
 #endif
 
 #include "cli.h"
@@ -169,15 +305,84 @@ CLICommand_t l_cli_commands[CLI_COMMAND_COUNT] =
     CLI_ENTRY(a),
 };
 
+#if defined(chip_LR1121)
+
+LR1121 radio = new Module(LORA_CS, LORA_IRQ, LORA_RST, LORA_BUSY);
+
+#elif defined(chip_SX1281)
+
+SX1281 radio = new Module(LORA_CS, LORA_IRQ, LORA_RST, LORA_BUSY);
+
+#else
 SX1276 radio = new Module(LORA_CS, LORA_IRQ, LORA_RST);
 
-//SX1276 radio_2 = new Module(LORA_CS_2, LORA_IRQ_2, LORA_RST_2);
+#if defined(BARVINOK_TX)
+SX1276 radio_2 = new Module(LORA_CS_2, LORA_IRQ_2, LORA_RST_2);
+#endif
+#endif
+
+#if defined(LED_IS_RGB)
+FastLED_NeoPixel<1, LED_BUILTIN, NEO_GRB> led;
+#define RED 0xFF0000
+#define GREEN 0x00FF00
+#define BLUE 0x0000FF
+#define LED_OFF 0x000000
+#endif
+
+void led_set_color(uint32_t color);
+
+void ledOn()
+{
+#if defined(LED_IS_RGB)    
+    led_set_color(GREEN);
+#else
+    digitalWrite(LED_BUILTIN, HIGH);
+#endif
+}
+
+void ledOff()
+{
+#if defined(LED_IS_RGB)    
+    led_set_color(LED_OFF);
+#else
+    digitalWrite(LED_BUILTIN, LOW);
+#endif
+}
+
+void led_set_color(uint32_t color)
+{
+#if defined(LED_IS_RGB)
+    led.setPixelColor(0, color);
+	led.show();
+#else
+    if (color) {
+        ledOn();
+    }
+    else {
+        ledOff();
+    }
+#endif    
+}
 
 void initLoRa() {
     Serial.println("Initializing LoRa....");
 
+    pinMode(LORA_RST, OUTPUT);
+    digitalWrite(LORA_RST, LOW);
+    delay(20);
+    digitalWrite(LORA_RST, HIGH);
+    delay(200);
+
+    // pinMode(LORA_BUSY, INPUT);
+    // while (digitalRead(LORA_BUSY)) {
+    //     Serial.println(F("busy"));
+    //     delay(10);
+    // }
+
+
 #if not defined(ELRS_RX)
     SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
+    // SPI.setFrequency(400000);
 #else
     SPI.pins(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
     SPI.begin();
@@ -186,14 +391,48 @@ void initLoRa() {
     pinMode(RADIO_TCXO_ENABLE, OUTPUT);
     digitalWrite(RADIO_TCXO_ENABLE, HIGH);
 #endif
+
+#if defined (chip_LR1121)
+    // int state = radio.setRegulatorDCDC();
+    // if (state == RADIOLIB_ERR_NONE) {
+    //     Serial.println(F("setRegulatorDCDC success!"));
+    // } else {
+    //     Serial.print(F("setRegulatorDCDC failed, code "));
+    //     Serial.println(state);
+    //     while (true);
+    // }
+
+    int state = radio.beginGFSK();
+#elif defined(chip_SX1281)
+    int state = radio.beginGFSK();
+#else
     int state = radio.beginFSK();
+#endif
+    
     if (state == RADIOLIB_ERR_NONE) {
         Serial.println(F("success!"));
     } else {
         Serial.print(F("failed, code "));
         Serial.println(state);
+        led_set_color(BLUE);
         while (true);
     }
+
+// for test purpose
+#if defined(BARVINOK_TX)
+    int state2 = radio_2.beginFSK();
+
+    if (state2 == RADIOLIB_ERR_NONE) {
+        Serial.println(F("success!"));
+    } else {
+        Serial.print(F("failed, code "));
+        Serial.println(state);
+        led_set_color(RED);
+        while (true);
+    }
+
+    led_set_color(GREEN);
+#endif
 
     // if needed, you can switch between LoRa and FSK modes
     //
@@ -203,7 +442,12 @@ void initLoRa() {
     // the following settings can also
     // be modified at run-time
     state = radio.setFrequency(default_freq);
+
+#if defined(chip_SX1281)
+    state = radio.setOutputPower(default_pwr);
+#else    
     state = radio.setOutputPower(default_pwr, radio_rfo_hf);
+#endif    
 
     // state = radio.transmitDirect();
     // if (state != RADIOLIB_ERR_NONE) {
@@ -220,7 +464,7 @@ void initLoRa() {
         }
         else {
             Serial.println("CW ON");
-            digitalWrite(LED_BUILTIN, HIGH);
+            ledOn();
         }
     #endif
 
@@ -233,6 +477,12 @@ void setup() {
     Serial.println("Setup test power tool....");
 
     pinMode(LED_BUILTIN, OUTPUT);
+
+#if defined(LED_IS_RGB)
+    led.begin();  // initialize strip (required!)
+	led.setBrightness(255);
+
+#endif
 
     initLoRa();
 
@@ -248,6 +498,11 @@ void setup() {
     #if defined(TX_EN_PIN)
         pinMode(TX_EN_PIN, OUTPUT);
         digitalWrite(TX_EN_PIN, HIGH);
+    #endif
+
+    #if defined(RX_EN_PIN)
+        pinMode(RX_EN_PIN, OUTPUT);
+        digitalWrite(RX_EN_PIN, LOW);
     #endif
 
     #if defined(FAN_EN_PIN)
@@ -283,7 +538,12 @@ static CLIRet_t pCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
     if (buf) {
         int pwr = atoi((char*)buf);
 
-        int state = radio.setOutputPower(pwr, radio_rfo_hf);
+        #if defined(chip_SX1281)
+            int state = radio.setOutputPower(default_pwr);
+        #else    
+            int state = radio.setOutputPower(default_pwr, radio_rfo_hf);
+        #endif
+
         if (state != RADIOLIB_ERR_NONE) {
             Serial.println(F("Selected output power is invalid for this module!"));
             Serial.println(state);
@@ -337,8 +597,11 @@ static CLIRet_t aCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
         int apc = atoi((char*)buf);
 #if defined(PIN_RFamp_APC2)
         dacWrite(PIN_RFamp_APC2, apc);
-#endif
+
         Serial.printf("Set DAC power control %d", apc);
+#else
+        Serial.printf("Analog control not supported");
+#endif
     }
     else {
         Serial.println("please set dac power control <dac value>");
@@ -358,7 +621,7 @@ static CLIRet_t cwCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
         if (cw == 0) {
             int state = radio.standby();
             Serial.println("CW OFF");
-            digitalWrite(LED_BUILTIN, LOW);
+            ledOff();
         }
         else {
             int state = radio.transmitDirect();
@@ -369,7 +632,7 @@ static CLIRet_t cwCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
             }
             else {
                 Serial.println("CW ON");
-                digitalWrite(LED_BUILTIN, HIGH);
+                ledOn();
             }
         }
     }

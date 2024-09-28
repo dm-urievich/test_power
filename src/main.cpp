@@ -279,7 +279,7 @@ const bool radio_rfo_hf = true;
 
 #define LORA_CS     26
 #define LORA_IRQ    14
-#define LORA_RST    12
+#define LORA_RST    15
 
 #define LORA_SCK    32
 #define LORA_MISO   33

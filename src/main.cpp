@@ -18,8 +18,9 @@
 // #define BAYCK_LR1121_DUAL 1
 // #define BETAFPV_2400_MICRO 1
 // #define HAPPYMODEL_ES24 1
-#define ES900TX_MAX 1
+// #define ES900TX_MAX 1
 // #define HGLRC_900 1
+#define AERONETIX_TX 1
 
 // #define CW_FROM_STARTUP 1
 float default_freq = 915;
@@ -272,6 +273,22 @@ const bool radio_rfo_hf = true;
 
 #define RX_EN_PIN   12
 #define FAN_EN_PIN  32
+#define LED_IS_RGB  1
+
+#elif defined(AERONETIX_TX)
+
+#define LORA_CS     26
+#define LORA_IRQ    14
+#define LORA_RST    12
+
+#define LORA_SCK    32
+#define LORA_MISO   33
+#define LORA_MOSI   25
+
+#define LED_BUILTIN 4
+
+const bool radio_rfo_hf = false;
+
 #define LED_IS_RGB  1
 
 #endif

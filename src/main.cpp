@@ -556,9 +556,9 @@ static CLIRet_t pCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
         int pwr = atoi((char*)buf);
 
         #if defined(chip_SX1281)
-            int state = radio.setOutputPower(default_pwr);
+            int state = radio.setOutputPower(pwr);
         #else    
-            int state = radio.setOutputPower(default_pwr, radio_rfo_hf);
+            int state = radio.setOutputPower(pwr, radio_rfo_hf);
         #endif
 
         if (state != RADIOLIB_ERR_NONE) {

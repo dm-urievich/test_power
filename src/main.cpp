@@ -1,5 +1,8 @@
 #include <Arduino.h>
 
+
+#define RADIOLIB_DEBUG_BASIC 1
+
 // LoRa include
 #include <SPI.h>
 #include <RadioLib.h>
@@ -20,7 +23,11 @@
 // #define HAPPYMODEL_ES24 1
 // #define ES900TX_MAX 1
 // #define HGLRC_900 1
-#define AERONETIX_TX 1
+// #define AERONETIX_TX 1
+// #define EMAX_OLED_TX 1
+// #define ELRS_BOX_TX 1
+#define AERONETIX_LR1121_V1_TX 1
+
 
 // #define CW_FROM_STARTUP 1
 float default_freq = 915;
@@ -145,6 +152,7 @@ const bool radio_rfo_hf = false;
 #define LORA_MOSI   32
 
 #define LED_BUILTIN 15
+#define LED_IS_RGB  1
 
 const bool radio_rfo_hf = false;
 
@@ -291,6 +299,64 @@ const bool radio_rfo_hf = false;
 
 #define LED_IS_RGB  1
 
+#elif defined(EMAX_OLED_TX)
+
+#define LORA_CS     5
+#define LORA_IRQ    4
+#define LORA_RST    14
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define LED_BUILTIN 27
+
+const bool radio_rfo_hf = false;
+
+#define RX_EN_PIN   12
+#define FAN_EN_PIN  32
+#define PIN_RFamp_APC2 26
+#define LED_IS_RGB  1
+
+#elif defined(ELRS_BOX_TX)
+
+#define LORA_CS     5
+#define LORA_IRQ    16
+#define LORA_RST    17
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define LED_BUILTIN 2
+
+const bool radio_rfo_hf = false;
+
+#define RX_EN_PIN   26
+#define TX_EN_PIN   27
+
+#elif defined(AERONETIX_LR1121_V1_TX)
+
+// left lr1121
+#define LORA_CS     33
+#define LORA_IRQ    14
+#define LORA_RST    12
+#define LORA_BUSY   32
+
+// #define RADIO_DCDC  1
+
+#define LORA_SCK    25
+#define LORA_MISO   27
+#define LORA_MOSI   26
+
+#define LED_BUILTIN 4
+#define LED_IS_RGB  1
+
+const bool radio_rfo_hf = false;
+
+#define chip_LR1121 1
+#define TCXO_voltage (3.0)
+
 #endif
 
 #include "cli.h"
@@ -340,11 +406,12 @@ SX1276 radio_2 = new Module(LORA_CS_2, LORA_IRQ_2, LORA_RST_2);
 
 #if defined(LED_IS_RGB)
 FastLED_NeoPixel<1, LED_BUILTIN, NEO_GRB> led;
+#endif
+
 #define RED 0xFF0000
 #define GREEN 0x00FF00
 #define BLUE 0x0000FF
 #define LED_OFF 0x000000
-#endif
 
 void led_set_color(uint32_t color);
 
@@ -418,8 +485,21 @@ void initLoRa() {
     //     Serial.println(state);
     //     while (true);
     // }
+    int state = 0;
 
-    int state = radio.beginGFSK();
+#ifdef TCXO_voltage
+    state = radio.setTCXO(TCXO_voltage, 5000);
+
+    if (state == RADIOLIB_ERR_NONE) {
+        Serial.println(F("success!"));
+    } else {
+        Serial.print(F("failed, code "));
+        Serial.println(state);
+    }
+#endif 
+
+    state = radio.beginGFSK();
+
 #elif defined(chip_SX1281)
     int state = radio.beginGFSK();
 #else
@@ -588,6 +668,10 @@ static CLIRet_t fCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
     if (buf) {
         int freq = atoi((char*)buf);
 
+        #ifdef TCXO_voltage
+        radio.setTCXO(TCXO_voltage, 5000);
+        #endif
+        
         int state = radio.setFrequency(freq);
         if (state != RADIOLIB_ERR_NONE) {
             Serial.println(F("Selected frequency is invalid for this module!"));

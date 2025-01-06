@@ -26,8 +26,9 @@
 // #define AERONETIX_TX 1
 // #define EMAX_OLED_TX 1
 // #define ELRS_BOX_TX 1
-#define AERONETIX_LR1121_V1_TX 1
-
+// #define AERONETIX_LR1121_V1_TX 1
+// #define GEMINI_XROSSBAND 1
+#define AERONETIX_LR1121_V2_TX
 
 // #define CW_FROM_STARTUP 1
 float default_freq = 915;
@@ -357,6 +358,48 @@ const bool radio_rfo_hf = false;
 #define chip_LR1121 1
 #define TCXO_voltage (3.0)
 
+#elif defined(GEMINI_XROSSBAND)
+
+// lr1121
+#define LORA_CS     27
+#define LORA_IRQ    37
+#define LORA_RST    26
+#define LORA_BUSY   36
+
+#define RADIO_DCDC  1
+
+#define LORA_SCK    25
+#define LORA_MISO   33
+#define LORA_MOSI   32
+
+#define LED_BUILTIN 22
+#define LED_IS_RGB  1
+
+#define FAN_EN_PIN  4
+
+const bool radio_rfo_hf = false;
+
+#define chip_LR1121 1
+
+#elif defined(AERONETIX_LR1121_V2_TX)
+
+// left lr1121
+#define LORA_CS     33
+#define LORA_IRQ    14
+#define LORA_RST    15
+#define LORA_BUSY   32
+
+#define LORA_SCK    25
+#define LORA_MISO   27
+#define LORA_MOSI   26
+
+#define LED_BUILTIN 4
+#define LED_IS_RGB  1
+
+const bool radio_rfo_hf = true;
+
+#define chip_LR1121 1
+
 #endif
 
 #include "cli.h"
@@ -477,15 +520,18 @@ void initLoRa() {
 #endif
 
 #if defined (chip_LR1121)
-    // int state = radio.setRegulatorDCDC();
-    // if (state == RADIOLIB_ERR_NONE) {
-    //     Serial.println(F("setRegulatorDCDC success!"));
-    // } else {
-    //     Serial.print(F("setRegulatorDCDC failed, code "));
-    //     Serial.println(state);
-    //     while (true);
-    // }
     int state = 0;
+    #if defined (RADIO_DCDC)
+        state = radio.setRegulatorDCDC();
+        if (state == RADIOLIB_ERR_NONE) {
+            Serial.println(F("setRegulatorDCDC success!"));
+        } else {
+            Serial.print(F("setRegulatorDCDC failed, code "));
+            Serial.println(state);
+            while (true);
+        }
+    
+    #endif
 
 #ifdef TCXO_voltage
     state = radio.setTCXO(TCXO_voltage, 5000);

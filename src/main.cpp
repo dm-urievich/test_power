@@ -27,8 +27,8 @@
 // #define EMAX_OLED_TX 1
 // #define ELRS_BOX_TX 1
 // #define AERONETIX_LR1121_V1_TX 1
-// #define GEMINI_XROSSBAND 1
-#define AERONETIX_LR1121_V2_TX
+#define GEMINI_XROSSBAND 1
+// #define AERONETIX_LR1121_V2_TX
 
 // #define CW_FROM_STARTUP 1
 float default_freq = 915;
@@ -377,7 +377,7 @@ const bool radio_rfo_hf = false;
 
 #define FAN_EN_PIN  4
 
-const bool radio_rfo_hf = false;
+const bool radio_rfo_hf = true;
 
 #define chip_LR1121 1
 

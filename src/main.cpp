@@ -7,7 +7,11 @@
 #include <SPI.h>
 #include <RadioLib.h>
 
+#ifdef defined(ESP8285)
 #include <FastLED_NeoPixel.h>
+#endif
+
+#include <SimpleCLI.h>
 
 // #define TTGO_V2 1
 //#define TTGO_t3_v1_6 1
@@ -27,12 +31,29 @@
 // #define EMAX_OLED_TX 1
 // #define ELRS_BOX_TX 1
 // #define AERONETIX_LR1121_V1_TX 1
-#define GEMINI_XROSSBAND 1
+// #define GEMINI_XROSSBAND 1
 // #define AERONETIX_LR1121_V2_TX
+// #define IFLIGHT_DIVERSITY_500_CENTER
+// #define IFLIGHT_DIVERSITY_500_LEFT
+// #define BelinRC_350_TX
+// #define CYCLONE_LR1121_1W
+// #define LT_433
+// #define BETAFPV_TX_900_V2 1
+// #define BAYCK_TX_580_LR1121 1
+// #define EDIFIER_433_TX 1
+// #define AERONETIX_5W_V1_TX 1
+// #define AERONETIX_1W_V3_TX 1
+// #define BelinRC_433_TX  1
+// #define COALAS_45_TX   1
+// #define NOMAD_LEFT_TX   1
+// #define EMAX_2400_TX    1
+// #define RANGER_MICRO_2400_TX 1
+#define ESP8285_SX1281_RX 1
 
 // #define CW_FROM_STARTUP 1
-float default_freq = 915;
+float default_freq = 2400;
 float default_pwr = 2;
+bool cw_is_on = false;
 
 #if defined(TTGO_V2) || defined(TTGO_t3_v1_6) 
 
@@ -199,8 +220,9 @@ const bool radio_rfo_hf = false;
 #define LORA_MOSI   32
 
 #define LED_BUILTIN 22
+#define LED_IS_RGB  1
 
-const bool radio_rfo_hf = false;
+const bool radio_rfo_hf = true;
 
 #define chip_LR1121 1
 
@@ -221,6 +243,7 @@ const bool radio_rfo_hf = false;
 #define FAN_EN_PIN  17
 
 #define LED_BUILTIN 16
+#define LED_IS_RGB  1
 
 #define chip_SX1281 1
 
@@ -400,36 +423,318 @@ const bool radio_rfo_hf = true;
 
 #define chip_LR1121 1
 
+#elif defined(IFLIGHT_DIVERSITY_500_CENTER)
+
+#define LORA_CS     27
+#define LORA_IRQ    36
+#define LORA_RST    26
+
+//right chip
+#define LORA_CS_2     13
+
+#define LORA_SCK    25
+#define LORA_MISO   33
+#define LORA_MOSI   32
+
+#define LED_BUILTIN 22
+#define LED_IS_RGB  1
+
+#define RX_EN_PIN   10
+#define TX_EN_PIN   14
+
+const bool radio_rfo_hf = false;
+
+#elif defined(IFLIGHT_DIVERSITY_500_LEFT)
+
+#define LORA_CS     13
+#define LORA_IRQ    39
+#define LORA_RST    21
+
+//center chip
+#define LORA_CS_2     27
+
+#define LORA_SCK    25
+#define LORA_MISO   33
+#define LORA_MOSI   32
+
+#define LED_BUILTIN 22
+#define LED_IS_RGB  1
+
+#define RX_EN_PIN   9
+#define TX_EN_PIN   15
+
+const bool radio_rfo_hf = false;
+
+#elif defined(BelinRC_350_TX)
+
+#define LORA_CS     5
+#define LORA_IRQ    4
+#define LORA_RST    14
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define LED_BUILTIN 27
+
+const bool radio_rfo_hf = false;
+
+#define RX_EN_PIN   12
+#define TX_EN_PIN   2
+#define FAN_EN_PIN  32
+#define PIN_RFamp_APC2 26
+#define LED_IS_RGB  1
+
+#elif defined(CYCLONE_LR1121_1W)
+
+// lr1121
+#define LORA_CS     5
+#define LORA_IRQ    39
+#define LORA_RST    22
+#define LORA_BUSY   38
+
+#define RADIO_DCDC  1
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define LED_BUILTIN 21
+#define LED_IS_RGB  1
+
+#define FAN_EN_PIN  4
+
+const bool radio_rfo_hf = true;
+
+#define chip_LR1121 1
+
+#elif defined(LT_433)
+
+#define LORA_CS     17
+#define LORA_IRQ    26
+#define LORA_RST    14
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define LED_BUILTIN 27
+
+#define RX_EN_PIN   13
+#define TX_EN_PIN   12
+const bool radio_rfo_hf = false;
+
+#define FAN_EN_PIN  16
+
+#elif defined(BETAFPV_TX_900_V2)
+
+#define LORA_CS     2
+#define LORA_IRQ    34
+#define LORA_RST    13
+
+#define LORA_SCK    25
+#define LORA_MISO   33
+#define LORA_MOSI   32
+
+#define LED_BUILTIN 22
+#define LED_IS_RGB  1
+
+const bool radio_rfo_hf = false;
+#define PIN_RFamp_APC2 26
+
+#define FAN_EN_PIN 27
+
+#elif defined(EDIFIER_433_TX)
+
+#define LORA_CS     5
+#define LORA_IRQ    4
+#define LORA_RST    14
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define LED_BUILTIN 27
+
+const bool radio_rfo_hf = false;
+
+#define FAN_EN_PIN  32
+#define PIN_RFamp_APC2 26
+#define LED_IS_RGB  1
+
+#elif defined(AERONETIX_5W_V1_TX)
+
+// left lr1121
+#define LORA_CS     33
+#define LORA_IRQ    14
+#define LORA_RST    13
+#define LORA_BUSY   32
+
+#define LORA_SCK    25
+#define LORA_MISO   27
+#define LORA_MOSI   26
+
+#define LED_BUILTIN 23
+#define LED_IS_RGB  1
+
+const bool radio_rfo_hf = true;
+
+#define chip_LR1121 1
+
+#elif defined(AERONETIX_1W_V3_TX)
+
+// left lr1121
+#define LORA_CS     33
+#define LORA_IRQ    14
+#define LORA_RST    13
+#define LORA_BUSY   32
+
+#define LORA_SCK    25
+#define LORA_MISO   27
+#define LORA_MOSI   26
+
+#define LED_BUILTIN 23
+#define LED_IS_RGB  1
+
+const bool radio_rfo_hf = false;
+
+#define chip_LR1121 1
+
+#elif defined(BelinRC_433_TX)
+
+#define LORA_CS     5
+#define LORA_IRQ    4
+#define LORA_RST    14
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define LED_BUILTIN 27
+
+const bool radio_rfo_hf = false;
+
+#define RX_EN_PIN   2
+#define TX_EN_PIN   12
+#define FAN_EN_PIN  32
+#define PIN_RFamp_APC2 26
+#define LED_IS_RGB  1
+
+#elif defined(COALAS_45_TX)
+
+#define LORA_CS     15
+#define LORA_IRQ    18
+#define LORA_RST    5
+
+#define LORA_SCK    14
+#define LORA_MISO   12
+#define LORA_MOSI   13
+
+#define LED_BUILTIN 21
+#define LED_IS_RGB  1
+
+const bool radio_rfo_hf = false;
+
+#define PIN_RFamp_APC2 25
+
+#elif defined(NOMAD_LEFT_TX)
+
+#define LORA_CS     27
+#define LORA_IRQ    37
+#define LORA_RST    15
+#define LORA_BUSY   36
+
+#define LORA_SCK    25
+#define LORA_MISO   33
+#define LORA_MOSI   32
+
+#define LORA_CS_2   13
+
+#define FAN_EN_PIN  2
+
+#define LED_BUILTIN 22
+#define LED_IS_RGB  1
+
+const bool radio_rfo_hf = true;
+
+#define PIN_RFamp_APC2 26
+#define RADIO_DCDC  1
+
+#define chip_LR1121 1
+
+#elif defined(EMAX_2400_TX)
+
+#define LORA_CS     5
+#define LORA_IRQ    4
+#define LORA_RST    14
+#define LORA_BUSY   21
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define RX_EN_PIN   27
+#define TX_EN_PIN   26
+
+#define FAN_EN_PIN  22
+
+#define LED_BUILTIN 12
+#define LED_IS_RGB  1
+
+#define chip_SX1281 1
+
+#elif defined(RANGER_MICRO_2400_TX)
+
+#define LORA_CS     4
+#define LORA_IRQ    21
+#define LORA_RST    5
+#define LORA_BUSY   22
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define RX_EN_PIN   32
+#define TX_EN_PIN   33
+
+#define FAN_EN_PIN  27
+
+#define LED_BUILTIN 15
+#define LED_IS_RGB  1
+
+#define chip_SX1281 1
+
+#elif defined(ESP8285_SX1281_RX)
+
+#define LORA_CS     15
+#define LORA_IRQ    4
+#define LORA_RST    2
+#define LORA_BUSY   5
+
+#define LORA_SCK    14
+#define LORA_MISO   12
+#define LORA_MOSI   13
+
+#define LED_BUILTIN 16
+
+#define chip_SX1281 1
+
 #endif
 
-#include "cli.h"
-#include <string.h>
+// Create CLI Object
+SimpleCLI cli;
 
-#define CLI_BUFFER_SIZE 128
-#define CLI_COMMAND_COUNT 5
+// Commands
+Command freqCmd;
+Command pwrCmd;
+Command analogCmd;
+Command cwCmd;
 
-#define CLI_ENTRY(command) { command ## Callback, (const CLI_BUF_VALUE_T *) #command } 
-
-static void cliRxCallback(uint8_t data);
-static void cliTxCallback(CLI_BUF_VALUE_T *buf, CLI_TX_BUF_COUNT_VALUE_T bufc);
-
-static CLIRet_t cliCallback(void *args, CLI_ARG_COUNT_VALUE_T argc);
-static CLIRet_t pCallback(void *args, CLI_ARG_COUNT_VALUE_T argc);
-static CLIRet_t fCallback(void *args, CLI_ARG_COUNT_VALUE_T argc);
-static CLIRet_t cwCallback(void *args, CLI_ARG_COUNT_VALUE_T argc);
-static CLIRet_t aCallback(void *args, CLI_ARG_COUNT_VALUE_T argc);
-
-CLIConfig_t l_cli_cnf;
-CLIInst_t l_cli_inst;
-CLI_BUF_VALUE_T l_cli_buf[CLI_BUFFER_SIZE];
-CLICommand_t l_cli_commands[CLI_COMMAND_COUNT] =
-{
-    CLI_ENTRY(cli),
-    CLI_ENTRY(p),
-    CLI_ENTRY(f),
-    CLI_ENTRY(cw),
-    CLI_ENTRY(a),
-};
+void fCallback(cmd* c);
+void pCallback(cmd* c);
+void aCallback(cmd* c);
+void cwCallback(cmd* c);
+void errorCallback(cmd_error* e);
 
 #if defined(chip_LR1121)
 
@@ -494,6 +799,11 @@ void led_set_color(uint32_t color)
 void initLoRa() {
     Serial.println("Initializing LoRa....");
 
+#if defined(LORA_CS_2)    
+    pinMode(LORA_CS_2, OUTPUT);
+    digitalWrite(LORA_CS_2, HIGH);
+#endif
+
     pinMode(LORA_RST, OUTPUT);
     digitalWrite(LORA_RST, LOW);
     delay(20);
@@ -507,7 +817,7 @@ void initLoRa() {
     // }
 
 
-#if not defined(ELRS_RX)
+#if not defined(ESP8285)
     SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
     // SPI.setFrequency(400000);
 #else
@@ -553,9 +863,9 @@ void initLoRa() {
 #endif
     
     if (state == RADIOLIB_ERR_NONE) {
-        Serial.println(F("success!"));
+        Serial.println(F("radio.begin success!"));
     } else {
-        Serial.print(F("failed, code "));
+        Serial.print(F("radio.begin failed, code "));
         Serial.println(state);
         led_set_color(BLUE);
         while (true);
@@ -629,14 +939,12 @@ void setup() {
 
     initLoRa();
 
-    l_cli_cnf.buf = l_cli_buf;
-    l_cli_cnf.bufc = CLI_BUFFER_SIZE;
-    l_cli_cnf.commands = l_cli_commands;
-    l_cli_cnf.commandc = CLI_COMMAND_COUNT;
-    l_cli_cnf.tx = cliTxCallback;
+    cli.setOnError(errorCallback); // Set error Callback
 
-    CLIInit(&l_cli_inst, l_cli_cnf);
-
+    freqCmd = cli.addSingleArgCmd("f", fCallback);
+    pwrCmd = cli.addSingleArgCmd("p", pCallback);
+    analogCmd = cli.addSingleArgCmd("a", aCallback);
+    cwCmd = cli.addSingleArgCmd("cw", cwCallback);
 
     #if defined(TX_EN_PIN)
         pinMode(TX_EN_PIN, OUTPUT);
@@ -659,27 +967,87 @@ void setup() {
 
 }
 
+String serial_input;
+
 void loop() {
     // Check if user typed something into the serial monitor
-    while (Serial.available()) {
-        uint8_t a;
-        a = Serial.read();
-       cliRxCallback(a);
-    }
+    if (Serial.available()) {
+        char input = (char) Serial.read();//Serial.readString();
+        Serial.print(input);
+        serial_input += input;
 
-    CLIHandle(&l_cli_inst);
+        if (serial_input.endsWith(String('\n'))) {
+            // Parse the user input into the CLI
+            cli.parse(serial_input);
+
+            if (cli.errored()) {
+                CommandError cmdError = cli.getError();
+
+                Serial.print("ERROR: ");
+                Serial.println(cmdError.toString());
+
+                if (cmdError.hasCommand()) {
+                    Serial.print("Did you mean \"");
+                    Serial.print(cmdError.getCommand().toString());
+                    Serial.println("\"?");
+                }
+            }
+
+            serial_input.clear();
+        }
+    }
 }
 
+// Callback function for freq command
+void fCallback(cmd* c) {
+    Command cmd(c); // Create wrapper object
 
-static CLIRet_t pCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
-{
-    void *buf = NULL;
-    CLIArg_t arg = {0U}; 
+    // Get first (and only) Argument
+    Argument arg = cmd.getArgument(0);
 
-    buf = CLIArgParse(&l_cli_inst, &arg, args, argc);
+    if (arg.isSet()) {
 
-    if (buf) {
-        int pwr = atoi((char*)buf);
+        // Get value of argument
+        String argVal = arg.getValue();
+        int freq = argVal.toInt();
+
+        if (freq) {
+            #ifdef TCXO_voltage
+            radio.setTCXO(TCXO_voltage, 5000);
+            #endif
+            
+            int state = radio.setFrequency(freq);
+            if (state != RADIOLIB_ERR_NONE) {
+                Serial.println(F("Selected frequency is invalid for this module!"));
+                Serial.println(state);
+            }
+            else {
+                Serial.printf("Set frequency %d\n", freq);
+
+                #if defined(chip_LR1121)
+                if (cw_is_on) {
+                    radio.transmitDirect();
+                }
+                #endif
+            }
+        }
+    }
+    else {
+        Serial.println("please set freq <freq value>");
+    }
+}
+
+// Callback function for power command
+void pCallback(cmd* c) {
+    Command cmd(c); // Create wrapper object
+
+    // Get first (and only) Argument
+    Argument arg = cmd.getArgument(0);
+
+    if (arg.isSet()) {
+        // Get value of argument
+        String argVal = arg.getValue();
+        int pwr = argVal.toInt();
 
         #if defined(chip_SX1281)
             int state = radio.setOutputPower(pwr);
@@ -692,83 +1060,29 @@ static CLIRet_t pCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
             Serial.println(state);
         }
         else {
-            int state = radio.transmitDirect();
-            Serial.printf("set power to %d", pwr);
+            Serial.printf("set power to %d\n", pwr);
         }
     }
     else {
         Serial.println("please provide power value in dBm");
     }
-
-    return CLI_OK;
 }
 
+void cwCallback(cmd* c) {
+    Command cmd(c); // Create wrapper object
 
-static CLIRet_t fCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
-{
-    void *buf = NULL;
-    CLIArg_t arg = {0U}; 
+    // Get first (and only) Argument
+    Argument arg = cmd.getArgument(0);
 
-    buf = CLIArgParse(&l_cli_inst, &arg, args, argc);
+    if (arg.isSet()) {
+        String argVal = arg.getValue();
+        int cw = argVal.toInt();
 
-    if (buf) {
-        int freq = atoi((char*)buf);
-
-        #ifdef TCXO_voltage
-        radio.setTCXO(TCXO_voltage, 5000);
-        #endif
-        
-        int state = radio.setFrequency(freq);
-        if (state != RADIOLIB_ERR_NONE) {
-            Serial.println(F("Selected frequency is invalid for this module!"));
-            Serial.println(state);
-        }
-        else {
-            Serial.printf("Set frequency %d", freq);
-        }
-    }
-    else {
-        Serial.println("please set freq <freq value>");
-    }
-	return CLI_OK;
-}
-
-static CLIRet_t aCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
-{
-    void *buf = NULL;
-    CLIArg_t arg = {0U}; 
-
-    buf = CLIArgParse(&l_cli_inst, &arg, args, argc);
-
-    if (buf) {
-        int apc = atoi((char*)buf);
-#if defined(PIN_RFamp_APC2)
-        dacWrite(PIN_RFamp_APC2, apc);
-
-        Serial.printf("Set DAC power control %d", apc);
-#else
-        Serial.printf("Analog control not supported");
-#endif
-    }
-    else {
-        Serial.println("please set dac power control <dac value>");
-    }
-	return CLI_OK;
-}
-
-static CLIRet_t cwCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
-{
-    void *buf = NULL;
-    CLIArg_t arg = {0U}; 
-
-    buf = CLIArgParse(&l_cli_inst, &arg, args, argc);
-
-    if (buf) {
-        int cw = atoi((char*)buf);
         if (cw == 0) {
             int state = radio.standby();
             Serial.println("CW OFF");
             ledOff();
+            cw_is_on = false;
         }
         else {
             int state = radio.transmitDirect();
@@ -780,42 +1094,47 @@ static CLIRet_t cwCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
             else {
                 Serial.println("CW ON");
                 ledOn();
+                cw_is_on = true;
             }
         }
     }
     else {
         Serial.println("please set CW 0/1");
     }
-
-    return CLI_OK;
 }
 
+void aCallback(cmd* c) {
+    Command cmd(c); // Create wrapper object
 
+    // Get first (and only) Argument
+    Argument arg = cmd.getArgument(0);
 
-static void cliRxCallback(uint8_t data)
-{
-    CLIInsert(&l_cli_inst, data);
+    if (arg.isSet()) {
+        String argVal = arg.getValue();
+        int apc = argVal.toInt();
+        #if defined(PIN_RFamp_APC2)
+            dacWrite(PIN_RFamp_APC2, apc);
+
+            Serial.printf("Set DAC power control %d", apc);
+        #else
+            Serial.printf("Analog control not supported");
+        #endif
+    }
+    else {
+        Serial.println("please set dac power control <dac value>");
+    }
 }
 
-static void cliTxCallback(CLI_BUF_VALUE_T *buf, CLI_TX_BUF_COUNT_VALUE_T bufc)
-{
-    Serial.write(buf, bufc);
-}
+// Callback in case of an error
+void errorCallback(cmd_error* e) {
+    CommandError cmdError(e); // Create wrapper object
 
-static CLIRet_t cliCallback(void *args, CLI_ARG_COUNT_VALUE_T argc)
-{
-    void *buf = NULL;
-    CLIArg_t arg = {0U}; 
+    Serial.print("ERROR: ");
+    Serial.println(cmdError.toString());
 
-    do
-    {
-        buf = CLIArgParse(&l_cli_inst, &arg, args, argc);
-
-        if (buf)
-        {
-            cliTxCallback((CLI_BUF_VALUE_T *) buf, strlen((char *) buf));
-        }
-    } while (buf != NULL);
-    
-    return CLI_OK;
+    if (cmdError.hasCommand()) {
+        Serial.print("Did you mean \"");
+        Serial.print(cmdError.getCommand().toString());
+        Serial.println("\"?");
+    }
 }

@@ -2,12 +2,13 @@
 
 
 #define RADIOLIB_DEBUG_BASIC 1
+#define RADIOLIB_GODMODE 1
 
 // LoRa include
 #include <SPI.h>
 #include <RadioLib.h>
 
-#ifdef defined(ESP8285)
+#if defined(ESP32) || defined(RP_PICO)
 #include <FastLED_NeoPixel.h>
 #endif
 
@@ -48,12 +49,19 @@
 // #define NOMAD_LEFT_TX   1
 // #define EMAX_2400_TX    1
 // #define RANGER_MICRO_2400_TX 1
-#define ESP8285_SX1281_RX 1
+// #define ESP8285_SX1281_RX 1
+// #define PICO_RADIO 1
+// #define AERONETIX_1W_24_V1_TX 1
+// #define BAYCKRC_GEMINI_NANO 1
+// #define PICO_RADIO_EVT2 1
+// #define DIY_E19 1
+// #define PICO_RADIO_EVT3 1
+#define BETAFPV_400_V1_1 1
 
 // #define CW_FROM_STARTUP 1
 float default_freq = 2400;
 float default_pwr = 2;
-bool cw_is_on = false;
+int cw_is_on = 0;
 
 #if defined(TTGO_V2) || defined(TTGO_t3_v1_6) 
 
@@ -719,6 +727,156 @@ const bool radio_rfo_hf = true;
 
 #define chip_SX1281 1
 
+#elif defined(PICO_RADIO)
+
+#define LORA_CS     17
+#define LORA_IRQ    15
+#define LORA_RST    12
+#define LORA_BUSY   14
+
+#define LORA_CS_2   27
+#define LORA_RST_2  22
+#define LORA_IRQ_2  5
+
+#define LORA_SCK    18
+#define LORA_MISO   16
+#define LORA_MOSI   19
+
+#define LED_BUILTIN 25
+
+#define RADIO_TCXO_ENABLE      13
+
+#define chip_SX1281 1
+#define B5_PICO 1
+
+#elif defined(AERONETIX_1W_24_V1_TX)
+
+// left lr1121
+#define LORA_CS     33
+#define LORA_IRQ    14
+#define LORA_RST    13
+#define LORA_BUSY   32
+
+#define LORA_SCK    25
+#define LORA_MISO   27
+#define LORA_MOSI   26
+
+#define LED_BUILTIN 23
+#define LED_IS_RGB  1
+
+const bool radio_rfo_hf = false;
+
+#define chip_LR1121 1
+
+#elif defined(BAYCKRC_GEMINI_NANO)
+
+#define LORA_CS     27
+#define LORA_IRQ    37
+#define LORA_RST    26
+#define LORA_BUSY   36
+
+#define LORA_SCK    25
+#define LORA_MISO   33
+#define LORA_MOSI   32
+
+#define LORA_CS_2   15
+
+#define FAN_EN_PIN  4
+
+#define LED_BUILTIN 12
+#define LED_IS_RGB  1
+
+const bool radio_rfo_hf = false;
+
+#define RADIO_DCDC  1
+
+#define chip_LR1121 1
+#define SET_RF_SWITCH 1
+
+#elif defined(PICO_RADIO_EVT2)
+
+#define LORA_CS     17
+#define LORA_IRQ    15
+#define LORA_RST    12
+#define LORA_BUSY   14
+
+#define LORA_CS_2   27
+#define LORA_RST_2  22
+#define LORA_IRQ_2  21
+#define LORA_BUSY_2 20
+
+#define LORA_SCK    18
+#define LORA_MISO   16
+#define LORA_MOSI   19
+
+#define LED_BUILTIN 25
+
+#define RADIO_TCXO_ENABLE      13
+
+#define chip_SX1281 1
+#define B5_PICO 1
+
+#elif defined(DIY_E19)
+
+#define LORA_CS     5
+#define LORA_IRQ    26
+#define LORA_RST    14
+
+#define LORA_SCK    18
+#define LORA_MISO   19
+#define LORA_MOSI   23
+
+#define LED_BUILTIN 27
+
+const bool radio_rfo_hf = false;
+
+#define RX_EN_PIN   13
+#define TX_EN_PIN   12
+#define FAN_EN_PIN  32
+
+// #define LED_IS_RGB  1
+
+#elif defined(PICO_RADIO_EVT3)
+
+#define LORA_CS     5
+#define LORA_IRQ    11
+#define LORA_RST    12
+#define LORA_BUSY   10
+
+#define LORA_CS_2   27
+#define LORA_RST_2  15
+#define LORA_IRQ_2  14
+#define LORA_BUSY_2 13
+
+#define LORA_SCK    6
+#define LORA_MISO   4
+#define LORA_MOSI   7
+
+#define LED_BUILTIN 25
+#define LED_IS_RGB  1
+
+#define chip_SX1281 1
+#define B5_PICO 1
+
+#elif defined(BETAFPV_400_V1_1)
+
+#define LORA_CS     2
+#define LORA_IRQ    34
+#define LORA_RST    13
+
+#define LORA_SCK    25
+#define LORA_MISO   33
+#define LORA_MOSI   32
+
+#define LED_BUILTIN 22
+#define LED_IS_RGB  1
+
+#define PIN_RFamp_APC2 26
+
+const bool radio_rfo_hf = false;
+
+#define FAN_EN_PIN 27
+
 #endif
 
 // Create CLI Object
@@ -743,6 +901,10 @@ LR1121 radio = new Module(LORA_CS, LORA_IRQ, LORA_RST, LORA_BUSY);
 #elif defined(chip_SX1281)
 
 SX1281 radio = new Module(LORA_CS, LORA_IRQ, LORA_RST, LORA_BUSY);
+
+#if defined(B5_PICO)
+SX1281 radio_2 = new Module(LORA_CS_2, LORA_IRQ_2, LORA_RST_2);
+#endif
 
 #else
 SX1276 radio = new Module(LORA_CS, LORA_IRQ, LORA_RST);
@@ -816,8 +978,12 @@ void initLoRa() {
     //     delay(10);
     // }
 
-
-#if not defined(ESP8285)
+#if defined(RP_PICO)
+    SPI.begin();
+    SPI.setMISO(LORA_MISO);
+    SPI.setMOSI(LORA_MOSI);
+    SPI.setSCK(LORA_SCK);
+#elif not defined(ESP8285)
     SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
     // SPI.setFrequency(400000);
 #else
@@ -827,6 +993,7 @@ void initLoRa() {
 #if defined RADIO_TCXO_ENABLE
     pinMode(RADIO_TCXO_ENABLE, OUTPUT);
     digitalWrite(RADIO_TCXO_ENABLE, HIGH);
+    delay(10);
 #endif
 
 #if defined (chip_LR1121)
@@ -854,10 +1021,19 @@ void initLoRa() {
     }
 #endif 
 
+#ifdef SET_RF_SWITCH
+    radio.setDioAsRfSwitch(0b00001111, 0b00000000, 0b00000100, 0b00001000, 0b00001000, 0b00000010, 0, 0b00000001);
+#endif
+
     state = radio.beginGFSK();
 
 #elif defined(chip_SX1281)
     int state = radio.beginGFSK();
+
+
+    #if defined(B5_PICO)
+    radio_2.beginGFSK();
+    #endif
 #else
     int state = radio.beginFSK();
 #endif
@@ -898,6 +1074,11 @@ void initLoRa() {
 
 #if defined(chip_SX1281)
     state = radio.setOutputPower(default_pwr);
+    #if defined(B5_PICO)
+    if (state != RADIOLIB_ERR_NONE) {
+        state = radio_2.setOutputPower(default_pwr);
+    }
+    #endif
 #else    
     state = radio.setOutputPower(default_pwr, radio_rfo_hf);
 #endif    
@@ -993,7 +1174,7 @@ void loop() {
                 }
             }
 
-            serial_input.clear();
+            serial_input = "";
         }
     }
 }
@@ -1017,6 +1198,9 @@ void fCallback(cmd* c) {
             #endif
             
             int state = radio.setFrequency(freq);
+            #if defined(B5_PICO)
+                radio_2.setFrequency(freq+2);
+            #endif
             if (state != RADIOLIB_ERR_NONE) {
                 Serial.println(F("Selected frequency is invalid for this module!"));
                 Serial.println(state);
@@ -1024,10 +1208,20 @@ void fCallback(cmd* c) {
             else {
                 Serial.printf("Set frequency %d\n", freq);
 
-                #if defined(chip_LR1121)
-                if (cw_is_on) {
+                #if defined(chip_LR1121) || defined(chip_SX1281)
+                if (cw_is_on == 1 || cw_is_on == 4) {
+                    radio.standby();
+                    delay(20);
                     radio.transmitDirect();
                 }
+
+                #if defined(B5_PICO)
+                    if (cw_is_on == 3 || cw_is_on == 4) {
+                        radio_2.standby();
+                        delay(20);
+                        radio_2.transmitDirect();
+                    }
+                #endif
                 #endif
             }
         }
@@ -1051,6 +1245,11 @@ void pCallback(cmd* c) {
 
         #if defined(chip_SX1281)
             int state = radio.setOutputPower(pwr);
+            #if defined(B5_PICO)
+            if (state != RADIOLIB_ERR_NONE) {
+                state = radio_2.setOutputPower(pwr);
+            }
+            #endif
         #else    
             int state = radio.setOutputPower(pwr, radio_rfo_hf);
         #endif
@@ -1078,24 +1277,63 @@ void cwCallback(cmd* c) {
         String argVal = arg.getValue();
         int cw = argVal.toInt();
 
-        if (cw == 0) {
-            int state = radio.standby();
-            Serial.println("CW OFF");
-            ledOff();
-            cw_is_on = false;
-        }
-        else {
-            int state = radio.transmitDirect();
-
-            if (state != RADIOLIB_ERR_NONE) {
-                Serial.println(F("[SX1278] Unable to start direct transmission mode, code "));
-                Serial.println(state);
+        switch (cw) {
+            case(0) : {
+                int state = radio.standby();
+                Serial.println("CW OFF");
+                ledOff();
+                cw_is_on = 0;
+                break;
             }
-            else {
-                Serial.println("CW ON");
-                ledOn();
-                cw_is_on = true;
+            case(1) : {
+                int state = radio.transmitDirect();
+                if (state != RADIOLIB_ERR_NONE) {
+                    Serial.println(F("[SX1278] Unable to start direct transmission mode, code "));
+                    Serial.println(state);
+                }
+                else {
+                    Serial.println("CW ON");
+                    ledOn();
+                    cw_is_on = 1;
+                }
+                break;
             }
+            #if defined(B5_PICO)
+            case(2) : {
+                int state = radio_2.standby();
+                Serial.println("CW radio 2 OFF");
+                ledOff();
+                cw_is_on = 0;
+                break;
+            }
+            case(3) : {
+                int state = radio_2.transmitDirect();
+                if (state != RADIOLIB_ERR_NONE) {
+                    Serial.println(F("[SX1278] Unable to start direct transmission mode, code "));
+                    Serial.println(state);
+                }
+                else {
+                    Serial.println("CW radio 2 ON");
+                    ledOn();
+                    cw_is_on = 3;
+                }
+                break;
+            }
+            case(4) : {
+                int state = radio.transmitDirect();
+                state = radio_2.transmitDirect();
+                if (state != RADIOLIB_ERR_NONE) {
+                    Serial.println(F("[SX1278] Unable to start direct transmission mode, code "));
+                    Serial.println(state);
+                }
+                else {
+                    Serial.println("CW radio 1 and 2 ON");
+                    ledOn();
+                    cw_is_on = 4;
+                }
+                break;
+            }
+            #endif
         }
     }
     else {

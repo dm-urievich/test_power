@@ -56,7 +56,8 @@
 // #define PICO_RADIO_EVT2 1
 // #define DIY_E19 1
 // #define PICO_RADIO_EVT3 1
-#define BETAFPV_400_V1_1 1
+// #define BETAFPV_400_V1_1 1
+#define PICO_RADIO_DVT1 1
 
 // #define CW_FROM_STARTUP 1
 float default_freq = 2400;
@@ -876,6 +877,28 @@ const bool radio_rfo_hf = false;
 const bool radio_rfo_hf = false;
 
 #define FAN_EN_PIN 27
+
+#elif defined(PICO_RADIO_DVT1)
+
+#define LORA_CS     27
+#define LORA_IRQ    5
+#define LORA_RST    12
+#define LORA_BUSY   4
+
+#define LORA_CS_2   17
+#define LORA_RST_2  22
+#define LORA_IRQ_2  15
+#define LORA_BUSY_2 14
+
+#define LORA_SCK    18
+#define LORA_MISO   16
+#define LORA_MOSI   19
+
+#define LED_BUILTIN 25
+#define LED_IS_RGB  1
+
+#define chip_SX1281 1
+#define B5_PICO 1
 
 #endif
 
